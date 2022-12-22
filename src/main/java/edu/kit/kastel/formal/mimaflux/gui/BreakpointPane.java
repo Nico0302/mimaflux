@@ -86,11 +86,13 @@ public class BreakpointPane extends BracketMatchingTextArea implements Observer 
 
     private void init(boolean showLineNumbers) {
         {
+            setBackground(UIManager.getColor("MimaFlux.CodePane.background"));
+
             // Borders
             BulletBorder breakpointBorder = new BulletBorder();
             Border secondBorder;
             if(showLineNumbers) {
-                secondBorder = new LineNrBorder(Color.lightGray);
+                secondBorder = new LineNrBorder(UIManager.getColor("Separator.foreground"));
             } else {
                 secondBorder = new EmptyBorder(0, BULLET_ICON.getIconWidth(), 0, 0);
             }

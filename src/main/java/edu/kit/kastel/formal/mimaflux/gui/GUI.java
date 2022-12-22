@@ -14,6 +14,10 @@
  */
 package edu.kit.kastel.formal.mimaflux.gui;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
+import com.formdev.flatlaf.util.SystemInfo;
 import edu.kit.kastel.formal.mimaflux.Command;
 import edu.kit.kastel.formal.mimaflux.Interpreter;
 import edu.kit.kastel.formal.mimaflux.MimaFlux;
@@ -21,19 +25,14 @@ import edu.kit.kastel.formal.mimaflux.State;
 import edu.kit.kastel.formal.mimaflux.Timeline;
 import edu.kit.kastel.formal.mimaflux.UpdateListener;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
-import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.codicons.Codicons;
-import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -126,10 +125,22 @@ public class GUI extends JFrame implements UpdateListener {
 
     private String formatValue(int val) {
         boolean isHex = hexMode.isSelected();
-        return String.format(isHex ? "0x%06x" : "%d", val);
+        if (isHex) {
+            return String.format(isHex ? "0x%06x" : "%d", val);
+        }
+        return String.format("%24s", Integer.toBinaryString(val)).replace(' ', '0');
     }
 
     private void initGui() {
+        if (SystemInfo.isMacFullWindowContentSupported) {
+            this.getRootPane().putClientProperty( "apple.awt.fullWindowContent", true );
+            this.getRootPane().putClientProperty( "apple.awt.transparentTitleBar", true );
+            this.getRootPane().putClientProperty( "apple.awt.windowTitleVisible", false );
+        }
+
+        FlatLaf.registerCustomDefaultsSource( "edu.kit.kastel.formal.mimaflux.themes" );
+        FlatDarkLaf.setup();
+
         Container cp = getContentPane();
         cp.setLayout(new BorderLayout());
 
@@ -141,11 +152,13 @@ public class GUI extends JFrame implements UpdateListener {
         });
         code.setBreakPointResource(this);
         code.setMinimumSize(new Dimension(200, 400));
+        JScrollPane codePane = new JScrollPane(code);
+        codePane.setBorder(BorderFactory.createEmptyBorder());
 
         JPanel memPanel = makeMemPanel();
 
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JScrollPane(code), BorderLayout.CENTER);
+        leftPanel.add(codePane, BorderLayout.CENTER);
         JLabel label = new JLabel("Breakpoints can be set/unset by right-clicking onto a line number");
         label.setFont(UIManager.getFont("TextField.font"));
         label.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
@@ -177,6 +190,8 @@ public class GUI extends JFrame implements UpdateListener {
         });
 
     }
+
+
 
     private JPanel makeMemPanel() {
         JPanel result = new JPanel(new GridBagLayout());
@@ -260,14 +275,17 @@ public class GUI extends JFrame implements UpdateListener {
     private Container makeButtonPanel() {
         JToolBar buttonPanel = new JToolBar();
         buttonPanel.setFloatable(false);
-        buttonPanel.add(button("Menu", null, Codicons.MENU, this::showMenu, false));
-        buttonPanel.addSeparator(new Dimension(50,0));
-        buttonPanel.add(button("Go to initial state", null, Codicons.DEBUG_RESTART, this::gotoStart, false));
-        buttonPanel.add(button("Continue backwards until breakpoint",  KeyStroke.getKeyStroke("F5"), Codicons.DEBUG_REVERSE_CONTINUE, e -> continueToBreakpoint(-1), true));
-        buttonPanel.add(button("Step backwards",  KeyStroke.getKeyStroke("F6"), Codicons.DEBUG_STEP_BACK, e -> timeline.addToPosition(-1), true));
-        buttonPanel.add(button("Step forwards",  KeyStroke.getKeyStroke("F8"), Codicons.DEBUG_STEP_OVER, e -> timeline.addToPosition(1), true));
-        buttonPanel.add(button("Continue forwards until breakpoint",  KeyStroke.getKeyStroke("F9"), Codicons.DEBUG_CONTINUE, e-> continueToBreakpoint(+1), true));
-        buttonPanel.add(button("Go to terminal state",  null, Codicons.DEBUG_START, e-> timeline.setPosition(timeline.countStates() - 1), true));
+        buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        if( SystemInfo.isMacFullWindowContentSupported )
+            buttonPanel.add( Box.createHorizontalStrut( 70 ), 0 );
+        buttonPanel.add(button("Menu", null, "menu.svg", this::showMenu, false));
+        buttonPanel.add(Box.createHorizontalGlue());
+        buttonPanel.add(button("Go to initial state", null, "debug_restart.svg", this::gotoStart, false));
+        buttonPanel.add(button("Continue backwards until breakpoint",  KeyStroke.getKeyStroke("F5"), "debug_reverse_continue.svg", e -> continueToBreakpoint(-1), true));
+        buttonPanel.add(button("Step backwards",  KeyStroke.getKeyStroke("F6"), "debug_step_back.svg", e -> timeline.addToPosition(-1), true));
+        buttonPanel.add(button("Step forwards",  KeyStroke.getKeyStroke("F8"), "debug_step_over.svg", e -> timeline.addToPosition(1), true));
+        buttonPanel.add(button("Continue forwards until breakpoint",  KeyStroke.getKeyStroke("F9"), "debug_continue.svg", e-> continueToBreakpoint(+1), true));
+        buttonPanel.add(button("Go to terminal state",  null, "debug_start.svg", e-> timeline.setPosition(timeline.countStates() - 1), true));
 
         return buttonPanel;
     }
@@ -421,14 +439,14 @@ public class GUI extends JFrame implements UpdateListener {
         } while(pos > 0 && pos < timeline.countStates());
     }
 
-    private JButton button(String text, KeyStroke keyStroke, Ikon ikon, ActionListener listener, boolean needsProgram) {
-        JButton res = new JButton(FontIcon.of(ikon, 28));
-        res.setDisabledIcon(FontIcon.of(ikon, 28, Color.lightGray));
+    private JButton button(String text, KeyStroke keyStroke, String icon, ActionListener listener, boolean needsProgram) {
+        JButton res = new JButton( new FlatSVGIcon( "edu/kit/kastel/formal/mimaflux/icons/" + icon ) );
+        //res.setDisabledIcon(FontIcon.of(ikon, 16, Color.lightGray));
         res.setToolTipText(text);
         res.addActionListener(listener);
-        res.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(5,10,5, 10),
-                res.getBorder()));
+        //res.setBorder(BorderFactory.createCompoundBorder(
+                //BorderFactory.createEmptyBorder(5,10,5, 10),
+                //res.getBorder()));
         res.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, text);
         res.getActionMap().put(text, new AbstractAction() {
             @Override

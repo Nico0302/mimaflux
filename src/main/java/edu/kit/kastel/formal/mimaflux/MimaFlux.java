@@ -78,6 +78,9 @@ public class MimaFlux {
                 ensureTests(timeline);
                 System.exit(0);
             } else {
+                System.setProperty("apple.awt.application.appearance", "system");
+                System.setProperty("apple.laf.useScreenMenuBar", "true");
+
                 GUI gui = new GUI(timeline);
                 gui.setVisible(true);
             }
