@@ -57,7 +57,7 @@ public class GUI extends JFrame implements UpdateListener {
     private Timeline timeline;
     private DefaultTableModel tableModel;
     private JSpinner pageSpinner;
-    private RepreComboBox repreMode;
+    private JComboBox<RepreState> repreMode;
     private JLabel stepLabel;
     private JTextField accuField;
     private JTextField iarField;
@@ -123,7 +123,7 @@ public class GUI extends JFrame implements UpdateListener {
     }
 
     private String formatValue(int val) {
-        switch ((RepreComboBox.RepreState) Objects.requireNonNull(repreMode.getSelectedItem())) {
+        switch ((RepreState) Objects.requireNonNull(repreMode.getSelectedItem())) {
             case BIN:
                 return String.format("%24s", Integer.toBinaryString(val))
                     .replace(' ', '0');
@@ -257,7 +257,7 @@ public class GUI extends JFrame implements UpdateListener {
         gbc.gridy ++;
         {
             JPanel p = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            this.repreMode = new RepreComboBox();
+            this.repreMode = new JComboBox(RepreState.values());
             repreMode.addActionListener(e -> refillTable());
             p.add(repreMode);
 
