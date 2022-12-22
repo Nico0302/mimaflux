@@ -51,9 +51,19 @@ import javax.swing.border.EmptyBorder;
 public class LineNrBorder extends EmptyBorder {
 
     /**
-     * The space left and right of the line
+     * Spacing between the left screen side and the line numbers.
      */
-    private static final int SEPARATION = 4;
+    private static final int PADDING_LEFT = BulletIcon.SIZE + 4;
+
+    /**
+     * Spacing between line numbers and the line.
+     */
+    private static final int PADDING_RIGHT = 8;
+
+    /**
+     * Spacing between the line and the leftmost cursor position.
+     */
+    private static final int MARGIN_RIGHT = 2;
     
     /**
      * The minimal width for the border.
@@ -101,7 +111,7 @@ public class LineNrBorder extends EmptyBorder {
         
         if(digits != numberOfDigits) {
             FontMetrics fm = g.getFontMetrics();
-            left = fm.stringWidth(Integer.toString(maxLine)) + 3*SEPARATION;
+            left = PADDING_LEFT + fm.stringWidth(Integer.toString(maxLine)) + PADDING_RIGHT + MARGIN_RIGHT;
             left = Math.max(left, MIN_WIDTH);
             textArea.revalidate();
             textArea.repaint();
@@ -150,10 +160,9 @@ public class LineNrBorder extends EmptyBorder {
         
         for (int i = step, line = 1; line <= maxLine; i += step, line++) {
             String lineNoStr = Integer.toString(line);
-            int w = fm.stringWidth(lineNoStr);
-            g.drawString(lineNoStr, left-2*SEPARATION - w, i - descent);
+            g.drawString(lineNoStr, PADDING_LEFT, i - descent);
         }
-        g.drawLine(left-SEPARATION, 0, left-SEPARATION, height);
+        g.drawLine(left - MARGIN_RIGHT, 0, left - MARGIN_RIGHT, height);
 
     }
 
